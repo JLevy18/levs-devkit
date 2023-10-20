@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+    /* Toolbar background */
+
+    #toolbar {
+        @apply bg-neutral-800 border-neutral-500 border rounded-xl 
+        
+        w-max p-1.5 flex justify-center items-center;
+
+    }
+
+
+    /* Toolbar Separator */
+
+    #separator {
+        @apply bg-neutral-600
+
+        w-[0.05rem] h-7 mx-2
+    }
+
+    /* Toolbar Options */
+
+    .option {
+        @apply opacity-90 rounded-md transition-colors ease-in-out
+        
+        w-7 h-7 p-[.3rem] mx-1.5 my-1
+    }
+
+    .option:hover {
+        @apply cursor-pointer
+    }
+
+    .option.modes:hover, .option.util:hover {
+        @apply bg-neutral-700
+    }
+
+        /* Exit Button */
+
+        .option#hide {
+            @apply bg-red-600
+        }
+
+        .option#hide:hover {
+            @apply bg-red-800
+        }
+    
+    /* Toolbar Menu */
+
+    #toolbar-menu {
+        @apply bg-neutral-800 border-neutral-500 border rounded-lg
+
+        w-max p-2 absolute top-[3.25rem] left-14
+
+    }
+
+    #color-options {
+        @apply grid grid-cols-9 gap-1
+    }
+
+    .color-option {
+        @apply w-[1.3rem] h-[1.3rem] rounded-full border border-neutral-500
+
+        cursor-pointer
+    }
+
+        
+}
