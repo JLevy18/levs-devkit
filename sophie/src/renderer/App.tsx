@@ -1,13 +1,16 @@
-import '../styles/App.css';
+import './styles/App.css';
 
-import Canvas from './components/Canvas';
+import React from 'react';
 import Toolbar from './components/toolbar/Toolbar';
 
-export default function App() {
+const App: React.FC = () => {
+
   return (
     <main>
-      <Toolbar />
-      <Canvas />
+      <Toolbar/>
     </main>
   );
+
 }
+
+export default App;
