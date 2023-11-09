@@ -2,12 +2,26 @@
 import React, { useState } from "react";
 import SettingsMenu from "./menus/SettingsMenu";
 
+interface Bounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+interface Position {
+  x: number;
+  y: number;
+}
+
 interface ToolbarOptionProps {
   option: {
     icon: JSX.Element | null;
     category: string;
     id: string;
   };
+  menuBounds: Bounds;
+  toolbarPostion: Position;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   toggleDirection: () => void;
@@ -15,6 +29,8 @@ interface ToolbarOptionProps {
 
 const ToolbarOption: React.FC<ToolbarOptionProps> = ({ 
   option,
+  menuBounds,
+  toolbarPostion,
   onMouseEnter,
   onMouseLeave, 
   toggleDirection 
