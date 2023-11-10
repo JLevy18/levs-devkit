@@ -1,6 +1,18 @@
 // ToolbarOption.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import SettingsMenu from "./menus/SettingsMenu";
+
+interface Bounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+interface Position {
+  x: number;
+  y: number;
+}
 
 interface ToolbarOptionProps {
   option: {
@@ -8,34 +20,26 @@ interface ToolbarOptionProps {
     category: string;
     id: string;
   };
+  menuBounds: Bounds;
+  toolbarPostion: Position;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   toggleDirection: () => void;
-  calculateMenuPosition: (menuRef: React.RefObject<HTMLDivElement>) => void; 
 }
 
 const ToolbarOption: React.FC<ToolbarOptionProps> = ({ 
   option,
+  menuBounds,
+  toolbarPostion,
   onMouseEnter,
   onMouseLeave, 
-  toggleDirection,
-  calculateMenuPosition,
+  toggleDirection 
 }) => {
-
-  const menuRef = useRef<HTMLDivElement>(null);
   const [showMenu, setShowMenu] = useState(false);
 
   const toggleMenu = () => {
     setShowMenu(!showMenu);
-  }
-
-  useEffect(() => {
-
-    if (showMenu) {
-      calculateMenuPosition(menuRef);
-    }
-
-  }, [showMenu, calculateMenuPosition]);
+  };
 
   return (
     <div 
@@ -47,10 +51,10 @@ const ToolbarOption: React.FC<ToolbarOptionProps> = ({
     >
       {option.icon}
       {showMenu && option.id === "settings" && (
-        <SettingsMenu ref={menuRef} id={`menu-${option.id}`} toggleDirection={toggleDirection} />
+        <SettingsMenu id={option.id} toggleDirection={toggleDirection} />
       )}
       {showMenu && option.id === "draw-color" && (
-        <SettingsMenu ref={menuRef}id={option.id} toggleDirection={toggleDirection} />
+        <SettingsMenu id={option.id} toggleDirection={toggleDirection} />
       )}
     </div>
   );
