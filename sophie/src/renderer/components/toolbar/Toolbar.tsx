@@ -34,7 +34,6 @@ const Toolbar: React.FC = () => {
     const toolbarRef = useRef<HTMLDivElement | null>(null);
 
     const [toolbarDirection, setToolbarDirection] = useState("horizontal");
-    const [initialOverflow, setInitalOverflow] = useState<Boolean>(false);
     const [maxOverflow, setMaxOverflow] = useState<number | null>(null);
     const [toolbarPosition, setToolbarPosition] = useState<Position>({x: 0, y: 0});
     const [disableDrag, setDisableDrag] = useState(false);
@@ -45,7 +44,7 @@ const Toolbar: React.FC = () => {
       bottom: window.innerHeight,
     });
   
-    const calculateMenuPosition = useCallback(throttle((menuRef: React.RefObject<HTMLDivElement>) => {
+    const calculateMenuPosition = useCallback((menuRef: React.RefObject<HTMLDivElement>) => {
         const menuElement = menuRef.current;
         const toolbarElement = toolbarRef.current;
         const rightBound = window.innerWidth - GLOBAL_PADDING;
@@ -53,31 +52,46 @@ const Toolbar: React.FC = () => {
         if (menuElement && toolbarElement) {
             const toolbarRect = toolbarElement.getBoundingClientRect();
             const menuRect = menuElement.getBoundingClientRect();
-
+            
             const menuRightEdge = Math.round(menuRect.right);
             const toolbarRightEdge = Math.round(toolbarRect.right);
 
+            const isOverflow = menuRightEdge > rightBound;
+            const remainingDragSpace = window.innerWidth - toolbarRightEdge;
+
+            const transform = window.getComputedStyle(menuElement).transform;
+            const transformValues = transform.match(/matrix.*\((.+)\)/);
+            const translateX = transformValues ? parseFloat(transformValues[1].split(', ')[4]) : 0;
+
+            let translation = translateX;
+            console.log({   
+                            remainingSpace: remainingDragSpace,
+                            translation: translation,
+                            maxOverflow: maxOverflow,
+                            isOverflow: isOverflow,
+                        })
+            if (isOverflow) {
+                translation -= 1;
+                menuElement.style.transform = `translateX(${translation}px)`;
+            }
+
+            if (remainingDragSpace <= 2 && maxOverflow === null){
+                setMaxOverflow(translateX * -1);
+            }
             
-            let overflow = menuRightEdge > rightBound;
+            if (remainingDragSpace > 2 && translation < 0 && maxOverflow) {
+                translation += 1
+                console.log({potentialTanslation: translation});
+                menuElement.style.transform = `translateX(${translation}px)`;
 
-            console.log("toolbarRightEdge: ", toolbarRightEdge)
-            if (overflow) {
-                console.log(toolbarRect.x + toolbarRect)
-
-                if (!initialOverflow){
-                    setInitalOverflow(true);
-                    
-                    
-
-
-                } else {
-
-                     //menuElement.style.transform = `translate(${-(Math.round(menuRightEdge - window.innerWidth))}px, 0px)`
+                if(translation === 0){
+                    setMaxOverflow(null);
                 }
 
             }
+
         }
-    }, 16), [toolbarPosition]);
+    }, [toolbarPosition]);
 
 
     const updateBounds = useCallback(() => {
@@ -95,15 +109,22 @@ const Toolbar: React.FC = () => {
         }
       }, []);
 
+    const resetOverflow = useCallback(() => {
+        setMaxOverflow(null);
 
+    }, []);
     useEffect(() => {
         // Update the bounds on component mount and window resize
         updateBounds();
         window.addEventListener('resize', updateBounds);
+        window.addEventListener('resize', resetOverflow);
 
         // Remove the event listener on component unmount
-        return () => window.removeEventListener('resize', updateBounds);
-      }, [updateBounds]);
+        return () => {
+            window.removeEventListener('resize', updateBounds);
+            window.removeEventListener('resize', resetOverflow);
+        }
+      }, [updateBounds, resetOverflow]);
     
 
     const handleOptionMouseEnter = () => {
