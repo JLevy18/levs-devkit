@@ -7,7 +7,6 @@ import { BsEraser } from 'react-icons/bs';
 import { TbSquareLetterT } from 'react-icons/tb';
 import { LuX, LuSettings, LuTrash2, LuPencil, LuUndo2, LuRedo2, LuSave, LuShapes } from 'react-icons/lu';
 import { Bounds, Position } from '../types';
-import { throttle } from '../util/throttle';
 
 
 const GLOBAL_PADDING = 4;
@@ -34,8 +33,10 @@ const Toolbar: React.FC = () => {
     const toolbarRef = useRef<HTMLDivElement | null>(null);
 
     const [toolbarDirection, setToolbarDirection] = useState("horizontal");
-    const [maxOverflow, setMaxOverflow] = useState<number | null>(null);
+    const [toolbarRemainingX, setToolbarRemainingX] = useState<number | null>(null);
     const [toolbarPosition, setToolbarPosition] = useState<Position>({x: 0, y: 0});
+    const [initialOverflow, setInitialOverflow] = useState<Boolean>(false);
+    const [menuDesiredTranslation, setMenuDesiredTranslation] = useState<number | null>(null);
     const [disableDrag, setDisableDrag] = useState(false);
     const [bounds, setBounds] = useState<Bounds>({
       left: 0,
@@ -50,45 +51,97 @@ const Toolbar: React.FC = () => {
         const rightBound = window.innerWidth - GLOBAL_PADDING;
     
         if (menuElement && toolbarElement) {
+
             const toolbarRect = toolbarElement.getBoundingClientRect();
-            const menuRect = menuElement.getBoundingClientRect();
-            
-            const menuRightEdge = Math.round(menuRect.right);
             const toolbarRightEdge = Math.round(toolbarRect.right);
+
+            const menuRect = menuElement.getBoundingClientRect();
+            const menuRightEdge = Math.round(menuRect.right);
+
 
             const isOverflow = menuRightEdge > rightBound;
             const remainingDragSpace = window.innerWidth - toolbarRightEdge;
-
+            
+            // Menu translation
             const transform = window.getComputedStyle(menuElement).transform;
             const transformValues = transform.match(/matrix.*\((.+)\)/);
             const translateX = transformValues ? parseFloat(transformValues[1].split(', ')[4]) : 0;
 
             let translation = translateX;
-            console.log({   
-                            remainingSpace: remainingDragSpace,
-                            translation: translation,
-                            maxOverflow: maxOverflow,
-                            isOverflow: isOverflow,
-                        })
-            if (isOverflow) {
-                translation -= 1;
-                menuElement.style.transform = `translateX(${translation}px)`;
-            }
-
-            if (remainingDragSpace <= 2 && maxOverflow === null){
-                setMaxOverflow(translateX * -1);
-            }
             
-            if (remainingDragSpace > 2 && translation < 0 && maxOverflow) {
-                translation += 1
-                console.log({potentialTanslation: translation});
-                menuElement.style.transform = `translateX(${translation}px)`;
+            let dragDirection = 'N';
 
-                if(translation === 0){
-                    setMaxOverflow(null);
+
+            if( toolbarRemainingX && toolbarRemainingX > remainingDragSpace){
+                dragDirection = 'R';
+            }
+
+            if( toolbarRemainingX && toolbarRemainingX < remainingDragSpace){
+                dragDirection = 'L';
+            }
+
+            if (translation === 0 && !isOverflow){
+                setInitialOverflow(false);
+            }
+
+
+            if (dragDirection !== 'N'){
+                
+                console.log({   
+                    menuDesiredTranslation: menuDesiredTranslation,
+                    translation: translation,
+                    dragDirection: dragDirection,
+                    isOverflow: isOverflow,
+                    initialOverflow: initialOverflow,
+                    toolbarRightEdge: toolbarRightEdge
+                })
+
+                if (dragDirection === 'R' && isOverflow){
+
+                    if (!initialOverflow) {
+                        // This is the first point we would've overflowed at.
+                        // We save the remainingDragSpace here because this will be our desired ending translation
+                        // if we were to drag all the way to the boundary.
+                        setMenuDesiredTranslation(-remainingDragSpace);
+                        setInitialOverflow(true)
+                    }
+
+                    translation -= 1;
+                    menuElement.style.transform = `translateX(${translation}px)`;
                 }
 
+                if (dragDirection === 'L' && translation < 0 && !isOverflow ){
+                    translation += 1
+                    menuElement.style.transform = `translateX(${translation}px)`;
+                }
+
+
+
+
             }
+            
+            if (dragDirection === 'N' && isOverflow)
+            {
+                
+                //check translation
+                //in some cases when menus are drag rapidly. We miss some translation calculations
+                if(menuDesiredTranslation && translation > menuDesiredTranslation + remainingDragSpace){
+                    //fix error
+                    menuElement.style.transform = `translateX(${menuDesiredTranslation + remainingDragSpace}px)`;
+                console.log(
+                    "dragging on bound",
+                    {   
+                        menuDesiredTranslation: menuDesiredTranslation,
+                        translation: translation,
+                        dragDirection: dragDirection,
+                        isOverflow: isOverflow,
+                        toolbarRightEdge: toolbarRightEdge
+                    }
+                    )
+                }
+            }
+
+
 
         }
     }, [toolbarPosition]);
@@ -109,22 +162,17 @@ const Toolbar: React.FC = () => {
         }
       }, []);
 
-    const resetOverflow = useCallback(() => {
-        setMaxOverflow(null);
 
-    }, []);
     useEffect(() => {
         // Update the bounds on component mount and window resize
         updateBounds();
         window.addEventListener('resize', updateBounds);
-        window.addEventListener('resize', resetOverflow);
 
         // Remove the event listener on component unmount
         return () => {
             window.removeEventListener('resize', updateBounds);
-            window.removeEventListener('resize', resetOverflow);
         }
-      }, [updateBounds, resetOverflow]);
+      }, [updateBounds]);
     
 
     const handleOptionMouseEnter = () => {
@@ -140,8 +188,17 @@ const Toolbar: React.FC = () => {
     };
 
     const handleDrag = (e: DraggableEvent, data: DraggableData) => {
-        updateBounds();
+
+
+
+        const toolbarElement = toolbarRef.current;
+        if (toolbarElement){
+            const toolbarRect = toolbarElement.getBoundingClientRect();
+            setToolbarRemainingX(window.innerWidth - toolbarRect.right)
+        }
+
         setToolbarPosition({x: data.x, y: data.y});
+
     };
 
     
@@ -152,6 +209,7 @@ const Toolbar: React.FC = () => {
             handle=".toolbar" 
             disabled={disableDrag}
             onDrag={handleDrag}
+            onStop={handleDrag}
         >
             <div ref={toolbarRef} className={`toolbar ${toolbarDirection}`}>
                 {categories.map((category, categoryIndex) => (
