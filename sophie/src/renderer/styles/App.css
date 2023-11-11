@@ -7,7 +7,7 @@
   html body #root main {
     @apply h-screen w-screen
     
-    overflow-hidden border-2 border-green-500;
+    overflow-hidden /*border-2*/ border-green-500;
 
     
 
