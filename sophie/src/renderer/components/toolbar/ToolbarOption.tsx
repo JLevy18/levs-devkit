@@ -1,5 +1,6 @@
 // ToolbarOption.tsx
 import React, { useEffect, useRef, useState } from "react";
+import ColorMenu from "./menus/ColorMenu";
 import SettingsMenu from "./menus/SettingsMenu";
 
 interface ToolbarOptionProps {
@@ -13,7 +14,8 @@ interface ToolbarOptionProps {
   onMouseLeave: () => void;
   toggleDirection: () => void;
   updateMaxOverflow: () => void;
-  calculateMenuPosition: (menuRef: React.RefObject<HTMLDivElement>) => void; 
+  calculateMenuPosition: (menuRef: React.RefObject<HTMLDivElement>) => void;
+  onColorSelection: () => void;
 }
 
 const ToolbarOption: React.FC<ToolbarOptionProps> = ({ 
@@ -24,13 +26,22 @@ const ToolbarOption: React.FC<ToolbarOptionProps> = ({
   toggleDirection,
   updateMaxOverflow,
   calculateMenuPosition,
+  onColorSelection
 }) => {
 
   const [showMenu, setShowMenu] = useState(false);
+  const [highlightSelection, setHighlightSelection] = useState(false);
 
   const toggleMenu = () => {
     setShowMenu(!showMenu);
-  }
+    if(option.id !== "settings"){
+      setHighlightSelection(false)
+    }else if (option.id === "settings" && highlightSelection){
+      setHighlightSelection(false)
+    }else {
+      setHighlightSelection(true)
+    }
+  } 
 
   useEffect(() => {
     if(showMenu){
@@ -53,7 +64,7 @@ const ToolbarOption: React.FC<ToolbarOptionProps> = ({
   return (
     <div 
       id={option.id} 
-      className={`toolbar-option ${showMenu ? "selected" : ""}`}
+      className={`toolbar-option ${highlightSelection ? "selected" : ""}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={toggleMenu}
@@ -63,7 +74,7 @@ const ToolbarOption: React.FC<ToolbarOptionProps> = ({
         <SettingsMenu ref={menuRef} id={`menu-${option.id}`} toggleDirection={toggleDirection} />
       )}
       {showMenu && option.id === "draw-color" && (
-        <SettingsMenu ref={menuRef}id={option.id} toggleDirection={toggleDirection} />
+        <ColorMenu ref={menuRef} id={option.id} onColorSelection={onColorSelection}/>
       )}
     </div>
   );
