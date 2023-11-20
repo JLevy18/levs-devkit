@@ -3,7 +3,7 @@ import React from "react";
 
 interface ColorOptionProps {
     hex: string;
-    onColorSelection?: () => void;
+    onColorSelection?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 

@@ -15,7 +15,7 @@ interface ToolbarOptionProps {
   toggleDirection: () => void;
   updateMaxOverflow: () => void;
   calculateMenuPosition: (menuRef: React.RefObject<HTMLDivElement>) => void;
-  onColorSelection: () => void;
+  onColorSelection: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 const ToolbarOption: React.FC<ToolbarOptionProps> = ({ 

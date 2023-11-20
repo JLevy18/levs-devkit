@@ -4,7 +4,7 @@ import ColorOption from "../ColorOption";
 
 interface ColorMenuProps {
   id: string;
-  onColorSelection: () => void;
+  onColorSelection: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 const ColorMenu = forwardRef<HTMLDivElement, ColorMenuProps>(({ id, onColorSelection }, ref) => {
